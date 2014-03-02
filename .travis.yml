@@ -1,0 +1,58 @@
+cache: apt
+
+language: cpp
+
+compiler:
+  - gcc 
+  - clang
+  
+env:
+  global:
+    - BOOTSTRAP_LATEX="1"
+  matrix: 
+    - CXX_OLEVEL=0
+    - CXX_OLEVEL=3
+
+matrix:
+  allow_failures:
+    - env: CXX_OLEVEL=0
+    - compiler: clang
+
+before_install:
+  - curl -OL http://raw.github.com/craigcitro/r-travis/master/scripts/travis-tool.sh
+  - curl -OL https://raw2.github.com/maverickg/utils/master/shell/wait4.sh
+  - chmod 755 ./travis-tool.sh wait4.sh
+  - ./travis-tool.sh bootstrap
+    
+install:
+  - ./travis-tool.sh install_aptget r-cran-runit ccache texinfo
+  - ./travis-tool.sh install_r inline Rcpp coda
+  - ccache --max-size 8G
+
+before_script: 
+  - cd stan && git fetch && git checkout origin/develop && cd ..
+  - cd rstan && git fetch && git checkout origin/develop && cd ..
+  - echo "CXX = ccache `R CMD config CXX`" >> R_Makevars 
+  - echo "CXXFLAGS = `R CMD config CXXFLAGS`" >> R_Makevars 
+  - export CLANG_EXTRA_ARG=""
+  - if [[ $CXX = "clang++" ]] ;  then export CLANG_EXTRA_ARG=" -Qunused-arguments -fcolor-diagnostics " ; fi
+  - sed -i "s/g++/${CXX}${CLANG_EXTRA_ARG}/" R_Makevars
+  - sed -i "s/O[0-3]/O$CXX_OLEVEL/" R_Makevars
+  - more .R_Makevars
+  - mkdir -p ~/.R/
+  - cat R_Makevars > ~/.R/Makevars
+  - more ~/.R/Makevars
+
+notifications:
+  email:
+    # recipients:
+      # - stan-buildbot@googlegroups.com
+    on_success: change
+    on_failure: always
+
+script:
+  - make build0 
+  - make install & ../wait4.sh $!
+
+after_script:
+  - ccache -s 
