@@ -1,0 +1,4 @@
+useDynLib(rstan8schools)
+exportPattern("^[[:alpha:]]+")
+import(methods)
+importFrom(Rcpp, evalCpp)
