@@ -52,7 +52,7 @@ notifications:
 
 script:
   - make build0 
-  - make install & ../wait4.sh $!
+  - make install & ./wait4.sh $!
 
 after_script:
-  - ccache -s 
+  - R -q -f ./examples/test.R
