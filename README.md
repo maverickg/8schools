@@ -10,7 +10,7 @@ package 8schools model using Stan
 
 * get the source of rstan and stan 
 ```
-# git submodule init
+# git submodule update --init
 ```
 
 * run `make build0` followed by `make build`
